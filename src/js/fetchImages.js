@@ -23,7 +23,4 @@ export class fetchGallery {
       },
     });
   }
-  incrementPage() {
-    this.page += 1;
-  }
 }

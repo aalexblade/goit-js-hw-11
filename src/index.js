@@ -1,5 +1,5 @@
 import Notiflix from 'notiflix';
-import { formEl, galleryEl, scrollEl } from '../src/js/refs'
+import { formEl, galleryEl, loadMore } from '../src/js/refs'
 import { fetchGallery } from './js/fetchImages'
 import { markupGallery } from './js/markupGallery'
 import { smoothScrolling } from "./js/smoothScrolling";
@@ -7,6 +7,7 @@ import { smoothScrolling } from "./js/smoothScrolling";
 
 const NewGallery = new fetchGallery();
 formEl.addEventListener('submit', onSubmitForm);
+loadMore.addEventListener('click', onClickLoadMore);
 
 
 async function onSubmitForm(event) {
@@ -37,10 +38,10 @@ async function onSubmitForm(event) {
 
     markupGallery(response);
     Notiflix.Notify.info(`Hooray! We found ${response.data.totalHits} images.`)
-    observer.observe(scrollEl);
-
+    loadMore.classList.remove('is-hidden');
 
      if (NewGallery.page === Math.ceil(response.data.totalHits / 40)) {
+      loadMore.classList.add('is-hidden');
       Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
     }
 
@@ -50,33 +51,21 @@ async function onSubmitForm(event) {
     }
   }
 
- 
-const options = {
-  root: null,
-  rootMargin: '150px',
-  threshold: 1,
-};
+  
+async function onClickLoadMore (event) {
+  NewGallery.page += 1;
 
+  try {
+    const response = await NewGallery.getPhotos();
 
-const observer = new IntersectionObserver((entries, observer) => {
-  entries.forEach(async entry => {
-
-    if (entry.isIntersecting) {
-      NewGallery.incrementPage();
-
-      try {
-        const response = await NewGallery.getPhotos();
-       
-        if (NewGallery.page === Math.ceil(response.data.totalHits / 40)) {
-          observer.unobserve(scrollEl);
-          Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
-        }
-
-        markupGallery(response);
-        smoothScrolling();
-      } catch (error) {
-        console.log(error);
-      }
+    if (NewGallery.page === Math.ceil(response.data.totalHits / 40)) {
+      loadMore.classList.add('is-hidden');
+      Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
     }
-  });
-}, options);
+
+    markupGallery(response);
+    smoothScrolling();
+  } catch (error) {
+    console.log(error);
+  }
+};
